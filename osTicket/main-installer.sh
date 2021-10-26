@@ -3,20 +3,12 @@
 #INSTALLING OSTICKET V1.15.4 ON CENTOS 8
 #Written by: Luis Fernández
 #EMAIL: lfernandez2803 AT gmail dot com
-#Last update: 22 of October of 2021
+#Last update: 26 of October of 2021
 #
 #TO READ
 #You must change the value of the variables according your configuration
 #
 #
-#*****************************************************
-#*****************************************************
-#sudo setsebool -P httpd_can_network_connect 1
-#semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/osTicket(/.*)?"
-#sudo restorecon -Rv /var/www/osTicket/
-#*****************************************************
-#*****************************************************
-#/etc/selinux/config
 
 PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
@@ -66,7 +58,7 @@ apcu}
 
 dnf -y module install mariadb
                           
-dnf -y install @httpd
+dnf -y install nginx
 
 dnf -y module reset php
 
@@ -77,9 +69,9 @@ systemctl start mariadb
 
 systemctl enable --now mariadb
 
-systemctl start httpd
+systemctl start nginx
 
-systemctl enable --now httpd
+systemctl enable --now nginx
 
 systemctl start php-fpm
 
@@ -128,13 +120,13 @@ mysql -u root -p$NEW_MYSQL_PASSWORD -e "GRANT ALL PRIVILEGES ON $NEW_DB_USER.* T
 mysql -u root -p$NEW_MYSQL_PASSWORD -e "FLUSH PRIVILEGES;"
 
 
-git clone $DOWNLOAD_LINK /var/www/html/osTicket/
+git clone $DOWNLOAD_LINK /usr/share/nginx/html
  
-cp /var/www/html/osTicket/include/ost-sampleconfig.php /var/www/html/osTicket/include/ost-config.php 
+cp /usr/share/nginx/html/osTicket/include/ost-sampleconfig.php /usr/share/nginx/html/osTicket/include/ost-config.php 
   
-chown -R apache:apache /var/www/html/osTicket
+chown -R nginx:nginx /usr/share/nginx/html/osTicket
 
-chmod 0666 /var/www/html/osTicket/include/ost-config.php
+chmod 0666 /usr/share/nginx/html/osTicket/include/ost-config.php
 
 
 firewall-cmd --add-service={http,https} --permanent
@@ -144,6 +136,6 @@ firewall-cmd --reload
 
 dnf -y remove expect
 
-systemctl restart httpd php-fpm
+systemctl restart nginx php-fpm
 
 reboot
