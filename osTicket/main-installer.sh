@@ -5,19 +5,22 @@
 #EMAIL: lfernandez2803 AT gmail dot com
 #Last update: 26 of October of 2021
 #
-#TO READ
-#You must change the value of the variables according your configuration
 #
+# -- THIS IMPORTANT -- PLEASE READ
 #
+# -- You must change the value of the variables according your configuration
+#
+# -- SELINUX MUST BE IN DISABLED MODE
+# 
 
 PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
 DOWNLOAD_LINK="https://github.com/osTicket/osTicket.git"
 CURRENT_MYSQL_PASSWORD=' '
-NEW_MYSQL_PASSWORD='strongpassword'     #Must be change
-NEW_DB_USER='zabbix'                    #Must be change
-NEW_DB_PASSWORD='AnotherStrongPassword' #Must be change
-NEW_DB='zabbix'                         #Must be change
+NEW_MYSQL_PASSWORD='r00t_p@ssw0rd'   #Must be change
+NEW_DB_USER='0st1ck3t_us3r'          #Must be change
+NEW_DB_PASSWORD='0st1ck3t_p@ssw0rd'  #Must be change
+NEW_DB='0st1ck3t_db'                 #Must be change
 
 
 dnf -y update
