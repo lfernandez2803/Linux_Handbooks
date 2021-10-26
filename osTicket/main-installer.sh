@@ -32,12 +32,7 @@ dnf -y update
 
 dnf -y install \
 yum-utils  \
-wget \
-unzip \
-curl \
-htop \
 vim \
-curl \
 git \
 expect
 
