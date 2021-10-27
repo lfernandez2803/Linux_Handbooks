@@ -35,17 +35,17 @@ By default, in CentOS 8, SELinux is enabled and in **enforcing mode.** It is hig
 
 You must run the following commands in your instance:
 
-```bash
+~~~
 setsebool -P httpd_can_network_connect 1
-```
+~~~
 
-```bash
+~~~
 semanage fcontext -a -t httpd_sys_rw_content_t "/usr/share/nginx/html/osTicket(/.*)?"
-```
+~~~
 
-```bash
+~~~
 restorecon -Rv /usr/share/nginx/html/osTicket/
-```
+~~~
 
 ### SELinux in disabled mode
 
@@ -68,104 +68,238 @@ SELINUXTYPE=targeted
 
 Save the file and reboot the system:
 
-```bash
+~~~
 shutdown -r now
-```
+~~~
 
 ---
 ## Installation
 
-dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm \
-https://rpms.remirepo.net/enterprise/remi-release-8.rpm
+1. ### Installation of repositories and utilities
 
+Install repositories:
+
+~~~
+dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+~~~
+
+~~~
+dnf -y install https://rpms.remirepo.net/enterprise/remi-release-8.rpm
+~~~
+
+Update the system:
+
+~~~
 dnf -y update
+~~~
 
+Install utilities:
+
+~~~
 dnf -y install yum-utils unzip vim git
+~~~
 
+2. ### MariaDB installation
 
+Install the MariaDB package with:
 
+~~~
+dnf -y module install @mariadb
+~~~
 
-dnf -y install php php-{pear,cgi,common,curl,mbstring,gd,mysqlnd,gettext,bcmath,json,xml,fpm,intl,zip,apcu}
+After the installation is finished, run the following commands to enable and start the server:
 
-dnf -y module reset php
-
-dnf -y module install php:remi-7.4
-
-systemctl start php-fpm
-
-systemctl enable --now php-fpm
-
-
-
-
-
-dnf -y module install mariadb
-
+~~~
 systemctl start mariadb
+~~~
 
+~~~
 systemctl enable --now mariadb
+~~~
+
+Secure your Database server after installation:
+
+```mysql_secure_installation```
+
+~~~
+NOTE: RUNNING ALL PARTS OF THIS SCRIPT IS RECOMMENDED FOR ALL MariaDB
+      SERVERS IN PRODUCTION USE!  PLEASE READ EACH STEP CAREFULLY!
 
 
+In order to log into MariaDB to secure it, we'll need the current
+password for the root user.  If you've just installed MariaDB, and
+you haven't set the root password yet, the password will be blank,
+so you should just press enter here.
 
-                          
+
+Enter current password for root (enter for none): 
+OK, successfully used password, moving on...
+
+
+Setting the root password ensures that nobody can log into the MySQL
+root user without the proper authorisation.
+
+
+Set root password? [Y/n] Y
+New password: 
+Re-enter new password: 
+Password updated successfully!
+Reloading privilege tables..
+ ... Success!
+
+
+By default, a MariaDB installation has an anonymous user, allowing anyone
+to log into MariaDB without having to have a user account created for
+them.  This is intended only for testing, and to make the installation
+go a bit smoother.  You should remove them before moving into a
+production environment.
+
+
+Remove anonymous users? [Y/n] y
+ ... Success!
+
+
+Normally, root should only be allowed to connect from 'localhost'.  This
+ensures that someone cannot guess at the root password from the network.
+
+
+Disallow root login remotely? [Y/n] y
+ ... Success!
+
+
+By default, MariaDB comes with a database named 'test' that anyone can
+access.  This is also intended only for testing, and should be removed
+before moving into a production environment.
+
+
+Remove test database and access to it? [Y/n] y
+ - Dropping test database...
+ ... Success!
+ - Removing privileges on test database...
+ ... Success!
+
+
+Reloading the privilege tables will ensure that all changes made so far
+will take effect immediately.
+
+
+Reload privilege tables now? [Y/n] y
+ ... Success!
+
+
+Cleaning up...
+
+
+All done!  If you've completed all of the above steps, your MariaDB
+installation should now be secure.
+
+
+Thanks for using MariaDB!
+~~~
+
+Login to your database server as root user and create a database for osTicket:
+
+~~~
+mysql -u root -p
+~~~
+
+~~~
+CREATE DATABASE osticket_db;
+GRANT ALL PRIVILEGES ON osticket_db.* TO osticket_user@localhost IDENTIFIED BY "Str0ngDBP@ssw0rd";
+FLUSH PRIVILEGES;
+QUIT;
+~~~
+
+3. ### Nginx installation
+
+Install the nginx package with:
+
+~~~                         
 dnf -y install nginx
+~~~
 
+After the installation is finished, run the following commands to enable and start the server:
+
+~~~
 systemctl start nginx
+~~~
 
+~~~
 systemctl enable --now nginx
+~~~
 
+4. ### PHP installation
 
+Install the php package with:
 
+~~~
+dnf -y install php php-{pear,cgi,common,curl,mbstring,gd,mysqlnd,gettext,bcmath,json,xml,fpm,intl,zip,apcu}
+~~~
 
-mysql_secure_installation
-expect \"Enter current password for root (enter for none):\"
-send \"$CURRENT_MYSQL_PASSWORD\r\"
-expect \"root password?\"
-send \"y\r\"
-expect \"New password:\"
-send \"$NEW_MYSQL_PASSWORD\r\"
-expect \"Re-enter new password:\"
-send \"$NEW_MYSQL_PASSWORD\r\"
-expect \"Remove anonymous users?\"
-send \"y\r\"
-expect \"Disallow root login remotely?\"
-send \"y\r\"
-expect \"Remove test database and access to it?\"
-send \"y\r\"
-expect \"Reload privilege tables now?\"
-send \"y\r\"
-expect eof
-")
+~~~
+dnf -y module reset php
+~~~
 
-echo "${MYSQL_CONFIG}"
+~~~
+dnf -y module install php:remi-7.4
+~~~
 
-mysql -u root -p$NEW_MYSQL_PASSWORD -e "CREATE DATABASE $NEW_DB character set utf8 collate utf8_bin;"
+After the installation is finished, run the following commands to enable and start the server:
 
-mysql -u root -p$NEW_MYSQL_PASSWORD -e "GRANT ALL PRIVILEGES ON $NEW_DB_USER.* TO $NEW_DB@'localhost' IDENTIFIED BY '$NEW_DB_PASSWORD';"
+~~~
+systemctl start php-fpm
+~~~
 
-mysql -u root -p$NEW_MYSQL_PASSWORD -e "FLUSH PRIVILEGES;"
+~~~
+systemctl enable --now php-fpm
+~~~
 
+5. ### OsTicket installation
 
+Download latest release of osTicket:
+
+~~~
 git clone $DOWNLOAD_LINK /usr/share/nginx/html
+~~~
 
+Next create an osTicket configuration file:
 
- 
+~~~
 cp /usr/share/nginx/html/osTicket/include/ost-sampleconfig.php /usr/share/nginx/html/osTicket/include/ost-config.php 
-  
+~~~
+
+Change ownership of osTicket web directory to nginx user and group:
+
+~~~
 chown -R nginx:nginx /usr/share/nginx/html/osTicket
+~~~
 
+~~~
 chmod 0666 /usr/share/nginx/html/osTicket/include/ost-config.php
+~~~
 
+6. ### Firewall configuration
 
+Open http and https ports in the firwalld:
 
-
+~~~
 firewall-cmd --add-service={http,https} --permanent
+~~~
 
+~~~
 firewall-cmd --reload
+~~~
 
+7. ### Last steps
 
+Restart the nginx and php-fpm services:
 
-
+~~~
 systemctl restart nginx php-fpm
+~~~
 
+Reboot the server:
+
+~~~
 reboot
+~~~
