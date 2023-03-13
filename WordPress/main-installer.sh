@@ -1,29 +1,21 @@
 #!/bin/bash
 #
-#INSTALLING WORDPRESS ON CENTOS 7
+#INSTALLING WORDPRESS ON CENTOS STREAM 9
 #Written by: Luis Fernández
 #EMAIL: lfernandez2803 AT gmail dot com
-#Last update: 15 of February of 2023
+#Last update: 27 of February of 2023
 #
 #
 # -- THIS IMPORTANT -- PLEASE READ
 #
 # -- You must change the value of the variables according your configuration
 #
-# -- SELINUX MUST BE IN DISABLED MODE
-#
-# -- You must install previously
-#	-- epel-release
-#	-- fedoraproject repo
-#	-- remi repo
-#	-- mariadb repo
-# 
 
 PATH=$PATH:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
 
 DOWNLOAD_LINK="http://wordpress.org/latest.tar.gz"
 DOWNLOADED_FILE="latest.tar.gz"
-AUTH_KEYS="https://api.wordpress.org/secret-key/1.1/salt/"
+#AUTH_KEYS="https://api.wordpress.org/secret-key/1.1/salt/"
 CURRENT_MYSQL_PASSWORD=' '
 NEW_MYSQL_PASSWORD='r00t_p@ssw0rd'    #Must be change
 NEW_DB_USER='w0rdpr3ss_us3r'          #Must be change
@@ -35,20 +27,22 @@ NEW_DB='w0rdpr3ss_db'                 #Must be change
 #https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm \
 #https://rpms.remirepo.net/enterprise/remi-release-7.rpm
 
-yum -y update
+dnf -y upgrade
 
-yum-config-manager --enable   remi-php81
+dnf clean all
 
-yum -y install \
-yum-utils \
+dnf module enable php:remi-8.2 -y
+
+dnf -y install \
+policycoreutils-python-utils \
 vim \
 expect \
 wget \
+httpd \
 MariaDB-server \
 MariaDB-client \
-httpd \
 php \
-php-{pear,\
+php-{cli,pear,\
 cgi,\
 common,\
 curl,\
@@ -62,7 +56,14 @@ xml,\
 fpm,\
 intl,\
 zip,\
-apcu}
+apcu,\
+opcache,\
+imagick,\
+xmlrpc,\
+readline,\
+memcached,\
+redis,\
+dom}
 
 systemctl start mariadb
 systemctl enable mariadb
@@ -93,32 +94,42 @@ expect eof
 
 echo "${MYSQL_CONFIG}"
 
-mysql -u root -p$NEW_MYSQL_PASSWORD -e "CREATE DATABASE $NEW_DB character set utf8;" #collate utf8_bin
-
-mysql -u root -p$NEW_MYSQL_PASSWORD -e "GRANT ALL PRIVILEGES ON $NEW_DB.* TO $NEW_DB_USER@'localhost' IDENTIFIED BY '$NEW_DB_PASSWORD';"
-
+mysql -u root -p$NEW_MYSQL_PASSWORD -e "CREATE DATABASE $NEW_DB character set utf8mb4 collate utf8mb4_bin;"
+mysql -u root -p$NEW_MYSQL_PASSWORD -e "CREATE USER $NEW_DB_USER@'localhost' IDENTIFIED BY '$NEW_DB_PASSWORD';"
+mysql -u root -p$NEW_MYSQL_PASSWORD -e "GRANT ALL PRIVILEGES ON $NEW_DB.* TO $NEW_DB_USER@'localhost';"
 mysql -u root -p$NEW_MYSQL_PASSWORD -e "FLUSH PRIVILEGES;"
 
 wget -P /usr/local/src/ $DOWNLOAD_LINK
-wget -P /usr/local/src/ $AUTH_KEYS
+#wget -P /usr/local/src/ $AUTH_KEYS
 tar -xzvf /usr/local/src/$DOWNLOADED_FILE -C /var/www/html/
 mkdir /var/www/html/wordpress/wp-content/uploads
 cp /var/www/html/wordpress/wp-config-sample.php /var/www/html/wordpress/wp-config.php
 chown -R apache:apache /var/www/html/*
-chmod -R 777 /var/www/html/wordpress
+chmod -R 775 /var/www/html/wordpress
 
 sed -i "s/database_name_here/$NEW_DB/g" /var/www/html/wordpress/wp-config.php
 sed -i "s/username_here/$NEW_DB_USER/g" /var/www/html/wordpress/wp-config.php
 sed -i "s/password_here/$NEW_DB_PASSWORD/g" /var/www/html/wordpress/wp-config.php
 
-sed -i "/define( 'AUTH_KEY'/d" /var/www/html/wordpress/wp-config.php
-sed -i "/define( 'SECURE_AUTH_KEY/d" /var/www/html/wordpress/wp-config.php
-sed -i "/define( 'LOGGED_IN_KEY/d" /var/www/html/wordpress/wp-config.php
-sed -i "/define( 'NONCE_KEY'/d" /var/www/html/wordpress/wp-config.php
-sed -i "/define( 'AUTH_SALT'/d" /var/www/html/wordpress/wp-config.php
-sed -i "/define( 'SECURE_AUTH_SALT'/d" /var/www/html/wordpress/wp-config.php
-sed -i "/define( 'LOGGED_IN_SALT'/d" /var/www/html/wordpress/wp-config.php
-sed -i "/define( 'NONCE_SALT'/d" /var/www/html/wordpress/wp-config.php
+#sed -i "/define( 'AUTH_KEY'/d" /var/www/html/wordpress/wp-config.php
+#sed -i "/define( 'SECURE_AUTH_KEY/d" /var/www/html/wordpress/wp-config.php
+#sed -i "/define( 'LOGGED_IN_KEY/d" /var/www/html/wordpress/wp-config.php
+#sed -i "/define( 'NONCE_KEY'/d" /var/www/html/wordpress/wp-config.php
+#sed -i "/define( 'AUTH_SALT'/d" /var/www/html/wordpress/wp-config.php
+#sed -i "/define( 'SECURE_AUTH_SALT'/d" /var/www/html/wordpress/wp-config.php
+#sed -i "/define( 'LOGGED_IN_SALT'/d" /var/www/html/wordpress/wp-config.php
+#sed -i "/define( 'NONCE_SALT'/d" /var/www/html/wordpress/wp-config.php
 
-yum -y remove expect
+#cat /usr/local/src/index.html >> /var/www/html/wordpress/wp-config.php
+
+systemctl start firewalld
+systemctl enable firewalld
+firewall-cmd --add-service={http,https} --permanent
+firewall-cmd --reload
+
+setsebool -P httpd_can_network_connect 1
+semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/wordpress(/.*)?"
+restorecon -Rv /var/www/html/wordpress/
+
+dnf -y remove expect
 systemctl restart httpd

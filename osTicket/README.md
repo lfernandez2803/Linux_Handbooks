@@ -7,9 +7,10 @@ osTicket is a widely-used open source support ticket system. It seamlessly integ
 
 ---
 ## Requirements
-* An instance with centos 8 installed -- **I'll assume you already have it**
-* nginx installation and configuration
-* mariadb installation and configuration
+* An instance with centos stream 9 installed
+* LAMP environment (web server, database server and PHP)
+* A user with sudo permissions
+* Internet
 ---
 ## Steps before installation
 
@@ -35,6 +36,7 @@ By default, in CentOS 8, SELinux is enabled and in **enforcing mode.** It is hig
 
 You must run the following commands in your instance:
 
+####For nginx
 ~~~
 setsebool -P httpd_can_network_connect 1
 ~~~
@@ -45,6 +47,19 @@ semanage fcontext -a -t httpd_sys_rw_content_t "/usr/share/nginx/html/osTicket(/
 
 ~~~
 restorecon -Rv /usr/share/nginx/html/osTicket/
+~~~
+
+####For httpd
+~~~
+setsebool -P httpd_can_network_connect 1
+~~~
+
+~~~
+semanage fcontext -a -t httpd_sys_rw_content_t "/var/www/html/osTicket(/.*)?"
+~~~
+
+~~~
+restorecon -Rv /var/www/html/osTicket/
 ~~~
 
 ### SELinux in disabled mode
@@ -76,6 +91,16 @@ shutdown -r now
 ## Installation
 
 1. ### Installation of repositories and utilities
+
+Install utilities:
+
+~~~
+dnf -y upgrade
+~~~
+
+~~~
+dnf -y install wget vim policycoreutils-python-utils
+~~~
 
 Install repositories:
 
