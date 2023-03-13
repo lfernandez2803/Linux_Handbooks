@@ -1,6 +1,6 @@
 # What is Graylog?
 
-<img src="https://assets.stickpng.com/images/62dea679ff3c6e4b8b5de8b9.png" alt="graylog" style="width:200px;"/>
+<img src="https://raw.githubusercontent.com/gilbarbara/logos/master/logos/graylog.svg" alt="graylog" style="width:200px;"/>
 
 Graylog is defined in terms of log management platform for collecting, indexing, and analyzing both structured and unstructured data from almost any source.
 
