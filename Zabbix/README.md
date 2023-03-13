@@ -5,12 +5,16 @@
 Zabbix is an open source monitoring software tool for diverse IT components, including networks, servers, virtual machines (VMs) and cloud services. Zabbix provides monitoring metrics, such as network utilization, CPU load and disk space consumption. The software monitors operations on Linux, Hewlett Packard Unix (HP-UX), Mac OS X, Solaris and other operating systems (OSes); however, Windows monitoring is only possible through agents.
 
 ---
+
 ## Requirements
-* An instance with centos stream 9 installed
-* LAMP environment (web server, database server and PHP)
-* A user with sudo permissions
-* Internet
+
+- An instance with centos stream 9 installed
+- LAMP environment (web server, database server and PHP)
+- A user with sudo permissions
+- Internet
+
 ---
+
 ## Steps before installation
 
 ### What is SELinux?
@@ -23,9 +27,9 @@ SELinux policy rules specify how processes and users interact with each other as
 
 SELinux has three modes of operation:
 
-* Enforcing: SELinux allows access based on SELinux policy rules.
-* Permissive: SELinux only logs actions that would have been denied if running in enforcing mode. This mode is useful for debugging and creating new policy rules.
-* Disabled: No SELinux policy is loaded, and no messages are logged.
+- Enforcing: SELinux allows access based on SELinux policy rules.
+- Permissive: SELinux only logs actions that would have been denied if running in enforcing mode. This mode is useful for debugging and creating new policy rules.
+- Disabled: No SELinux policy is loaded, and no messages are logged.
 
 By default, in CentOS 8, SELinux is enabled and in **enforcing mode.** It is highly recommended to keep SELinux in enforcing mode. However, sometimes it may interfere with the functioning of some application, and you need to set it to the permissive mode or disable it completely.
 
@@ -35,7 +39,7 @@ By default, in CentOS 8, SELinux is enabled and in **enforcing mode.** It is hig
 
 You must run the following commands in your instance:
 
-Enable SELinux  boolean “httpd_can_connect_zabbix” that will allow http daemon to connect to Zabbix:
+Enable SELinux boolean “httpd_can_connect_zabbix” that will allow http daemon to connect to Zabbix:
 
 ```sh
 setsebool -P httpd_can_connect_zabbix 1
@@ -47,7 +51,7 @@ To allow http daemon to connect to remote database through SELinux
 setsebool -P httpd_can_network_connect_db 1
 ```
 
-Enable SELinux  boolean “zabbix_can_network” that will allow Zabbix to connect to all TCP ports :
+Enable SELinux boolean “zabbix_can_network” that will allow Zabbix to connect to all TCP ports :
 
 ```sh
 setsebool -P zabbix_can_network on
@@ -76,7 +80,7 @@ vim /etc/selinux/config
 SELINUX=disabled
 # SELINUXTYPE= can take one of these three values:
 #     targeted - Targeted processes are protected,
-#     minimum - Modification of targeted policy. Only selected processes are protected. 
+#     minimum - Modification of targeted policy. Only selected processes are protected.
 #     mls - Multi Level Security protection.
 SELINUXTYPE=targeted
 ```
@@ -269,7 +273,7 @@ mysql> quit;
 
 Install the httpd package with:
 
-```sh                       
+```sh
 dnf -y install httpd
 ```
 
@@ -318,7 +322,7 @@ memcached,\
 redis,\
 dom}
 ```
- 
+
 After the installation is finished, run the following commands to enable and start the server:
 
 ```sh
